@@ -152,7 +152,7 @@ if __name__ == '__main__':
     from os import environ
 
     # Get the GitHub API token from the environment
-    repo_url = 'https://github.com/nowpayhub/analytics-scripts'
+    repo_url = 'https://github.com/burnash/gspread'
     reponse = get_repo_pull_requests_filterd_data(repo_url, 30)
     with open('test.json', 'w') as f:
         f.write(dumps(reponse, indent=4, default=str))
