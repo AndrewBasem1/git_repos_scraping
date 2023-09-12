@@ -22,7 +22,20 @@ def export_github_access_token_to_env_var(github_token:str):
     """
     Export the GitHub access token to an environment variable called `GITHUB_TOKEN`
     """
-    environ['GITHUB_TOKEN'] = github_token
+    headers = {
+        'Authorization': f'Bearer {github_token}',
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28"
+    }
+    url = 'https://api.github.com/user'
+    response = get(url, headers=headers)
+    if response.status_code == 200:
+        environ['GITHUB_TOKEN'] = github_token
+        return 'Correctly authenticated your github token'
+    else:
+        return 'Incorrect github token'
+        
+    # environ['GITHUB_TOKEN'] = github_token
 
 def _build_repo_url_for_api_calls(repo_url:str) -> str:
     """
@@ -90,7 +103,7 @@ def _get_pr_reviews(pr_data_endpoint_url:str, pr_number:int, request_headers:dic
     filtered_pr_reviews = [_filter_pr_review_dict(pr_review) for pr_review in raw_pr_reviews]
     return filtered_pr_reviews
 
-def get_repo_pull_requests_filterd_data(repo_url:str, days_back:int):
+def get_github_repo_pull_requests_filterd_data(repo_url:str, days_back:int):
     """
     Iteratively get all the pull requests for a given repository, only the ones that were merged in the last `days_back` days.
     

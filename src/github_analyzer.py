@@ -3,7 +3,7 @@ from datetime import datetime
 from matplotlib import pyplot as plt
 
 
-def analyze_pr_data(pr_filtered_data: dict, str_vars_to_check: list | str = None):
+def analyze_github_pr_data(pr_filtered_data: dict, str_vars_to_check: list | str = None):
     """
     This function analyzes the pull request data and answers the following questions:
     1. How many pull requests were merged each day?
@@ -80,33 +80,3 @@ def analyze_pr_data(pr_filtered_data: dict, str_vars_to_check: list | str = None
     }
     
     return analysis_results
-
-def plot_merged_pr_counts_per_day(merged_pr_counter_per_day:Counter):
-    if not(isinstance(merged_pr_counter_per_day, Counter)):
-        raise TypeError("merged_pr_counter_per_day must be a Counter object")
-    if len(merged_pr_counter_per_day) == 0:
-        print('there was no pull requests merged in the requested timeframe')
-        return None
-    
-    # sorting the counter by date (the key)
-    if len(merged_pr_counter_per_day.keys()) > 1:
-        merged_pr_counter_per_day = Counter(dict(sorted(merged_pr_counter_per_day.items(), key=lambda item: item[0], reverse=True)))
-    
-    # plotting the data in a bar chart using matplotlib
-    dates = list(merged_pr_counter_per_day.keys())
-    counts = list(merged_pr_counter_per_day.values())
-    print(counts)
-    print(type(counts[0]))
-    bar_plot = plt.bar(dates, counts)
-    plt.yticks(ticks=range(0, max(counts)+2))
-    # show y values on the bars
-    for bar in bar_plot:
-        height = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width()/2.0, height, str(height), ha='center', va='bottom')
-    # plt.xticks(rotation=80)
-    plt.xlabel('Date')
-    plt.ylabel('Number of merged pull requests')
-    plt.title('Number of merged pull requests per day')
-    plt.show()
-    return bar_plot
-    
