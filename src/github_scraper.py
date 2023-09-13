@@ -2,8 +2,6 @@ from datetime import datetime, timedelta
 from urllib.parse import urlparse
 from requests import get
 from os import environ
-from utils import _parse_timestamp_to_date
-
 
 class GitHubRepoUrlError(Exception):
     """
@@ -72,13 +70,17 @@ def _filter_pr_event_dict(pr_event:dict) -> dict:
     needed_keys = ['number', 'title', 'body', 'merged_at']
     filtered_pr_event = {k: pr_event[k] for k in needed_keys}
     if filtered_pr_event['merged_at'] is not None:
-        filtered_pr_event['merged_at'] = _parse_timestamp_to_date(filtered_pr_event['merged_at'])
+        merged_at_str :str = filtered_pr_event['merged_at']
+        merged_at_str_iso = merged_at_str.replace('Z','')
+        filtered_pr_event['merged_at'] = datetime.fromisoformat(merged_at_str_iso)
     return filtered_pr_event
 
 def _filter_pr_review_dict(pr_review:list) -> dict:
     username = pr_review['user']['login']
     state = pr_review['state']
-    submitted_at = _parse_timestamp_to_date(pr_review['submitted_at'])
+    submitted_at_str :str = pr_review['submitted_at']
+    submitted_at_str_iso = submitted_at_str.replace('Z','')
+    submitted_at = datetime.fromisoformat(submitted_at_str_iso)
     
     filterd_pr_review = {
         'username': username,
@@ -166,6 +168,6 @@ if __name__ == '__main__':
 
     # Get the GitHub API token from the environment
     repo_url = 'https://github.com/burnash/gspread'
-    reponse = get_repo_pull_requests_filterd_data(repo_url, 30)
-    with open('test.json', 'w') as f:
+    reponse = get_github_repo_pull_requests_filterd_data(repo_url, 30)
+    with open('test_github.json', 'w') as f:
         f.write(dumps(reponse, indent=4, default=str))

@@ -4,11 +4,16 @@
         "2023-09-04": 1,
         "2023-08-18": 3,
         "2023-08-16": 1,
+        "2023-09-10": 1,
         "2023-08-13": 1
     },
     "approvers_counter": {
-        "lavigne958": 5,
-        "alifeee": 3
+        "lavigne958": 7,
+        "alifeee": 4
     },
-    "str_matches_counter": {}
+    "str_matches_counter": {
+        "api": 7,
+        "version": 11,
+        "fix": 13
+    }
 }
