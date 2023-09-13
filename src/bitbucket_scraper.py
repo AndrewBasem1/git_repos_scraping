@@ -65,10 +65,21 @@ def _get_bitbucket_pr_raw_data_page(
 
     response = get(url=url, headers=headers, params=query_params)
     if response.status_code == 200:
-        print(response.request.url)
-        bithucket_raw_pr_data = response.json()
-        return bithucket_raw_pr_data
+        if response.json()['size'] == 0:
+            print('no pull requests found in the selected timeframe')
+            return None
+        bitbucket_raw_pr_data = response.json()
+        next_page_exists = ('next') in bitbucket_raw_pr_data.keys()
+        while next_page_exists:
+            query_params['page'] += 1
+            next_response = get(url=url,headers=headers,params=query_params)
+            next_response_dict = next_response.json()
+            next_response_values = next_response_dict['values']
+            next_page_exists = ('next' in next_response_dict)
+            bitbucket_raw_pr_data['values'].extend(next_response_values)
+        return bitbucket_raw_pr_data
     else:
+        print('no')
         raise Exception("failed to get bitbucket pull requests data")
 
 
@@ -101,8 +112,21 @@ def _get_bitbucket_pr_activity_log(pr_number:int,repo_data_tuple:namedtuple) -> 
     response = get(url=url,headers=headers,params=query_params)
     
     if response.status_code == 200:
-        print(response.request.url)
         bitbucket_raw_pr_activity_data = response.json()
+        next_page_exists = ('next' in bitbucket_raw_pr_activity_data)
+        if next_page_exists:
+            next_page_url = bitbucket_raw_pr_activity_data['next']
+        while next_page_exists:
+            next_response = get(url=next_page_url)
+            next_response_dict = next_response.json()
+            next_page_exists = ('next' in next_response_dict.keys())
+            if next_page_exists:
+                next_page_url = next_response_dict['next']
+                pass
+            next_response_values = next_response_dict['values']
+            bitbucket_raw_pr_activity_data['values'].extend(next_response_values)
+            
+            
         return bitbucket_raw_pr_activity_data
     else:
         print(response.request.url)
@@ -128,28 +152,27 @@ def _get_approvals_from_bitbucket_pr_activity_log(pr_activity_log:dict) -> dict:
             approvals_list.append(approval_event)
     return approvals_list
 
-def get_bitbucket_repo_pull_requests_filtered_data(repo_url: str, days_back: int):
-    repo_data_tuple = _get_workspace_and_repo_from_url(repo_url)
-    prs = []
-    page_num = 1
-    while True:
-        bitbucket_raw_pr_data = _get_bitbucket_pr_raw_data_page(
-            repo_data_tuple=repo_data_tuple, days_ago=days_back, page_num=page_num
-        )
-        prs.extend(_format_bitbucket_pr_raw_data(bitbucket_raw_pr_data))
-        if bitbucket_raw_pr_data["next"] is None:
-            break
-        page_num += 1
-    return prs
-            
-            
-            
-    
+def _iterate_prs_and_append_approvals_list(prs_filtered:list, repo_data_tuple:namedtuple) -> list:
+    for pr in prs_filtered:
+        pr_number = pr['number']
+        pr_activity_log = _get_bitbucket_pr_activity_log(pr_number=pr_number,repo_data_tuple=repo_data_tuple)
+        pr_approvals_list = _get_approvals_from_bitbucket_pr_activity_log(pr_activity_log=pr_activity_log)
+        pr['reviews'] = pr_approvals_list
+    return prs_filtered
+
+def get_bitbucket_repo_pull_requests_filterd_data(repo_url:str, days_ago:int) -> list:
+    repo_data_tuple = _get_workspace_and_repo_from_url(repo_url=repo_url)
+    bitbucket_raw_pr_data = _get_bitbucket_pr_raw_data_page(repo_data_tuple=repo_data_tuple, days_ago=days_ago)
+    if bitbucket_raw_pr_data is None:
+        return None
+    prs_filtered = _format_bitbucket_pr_raw_data(bitbucket_raw_pr_data=bitbucket_raw_pr_data)
+    prs_final = _iterate_prs_and_append_approvals_list(prs_filtered=prs_filtered,repo_data_tuple=repo_data_tuple)
+    return prs_final
+
 
 if __name__ == "__main__":
     # username = 'Manno_123'
     # app_password = 'ATBByvpEYBkxy9uLdGLfNSQ5rMAd9E502B3A'
-    # print(_encode_username_and_password(username,app_password))
     from json import dumps
 
     repo_url = "https://bitbucket.org/fargo3d/public/src/bb3829f0c860c774e09f9c7299a0c36863fe19d5/?at=release%2Fpublic"
@@ -161,14 +184,12 @@ if __name__ == "__main__":
     with open("test.json", "w") as f:
         f.write(dumps(eshta, indent=4, default=str))
         
-    eshta_filtered = _format_bitbucket_pr_raw_data(eshta)
+    prs_filtered = _format_bitbucket_pr_raw_data(eshta)
     
     with open('test_bitbucket_filtered.json', 'w') as f:
-        f.write(dumps(eshta_filtered,indent=4, default=str))
+        f.write(dumps(prs_filtered,indent=4, default=str))
 
-    pr_number = eshta_filtered[0]['number']
+    prs_final = _iterate_prs_and_append_approvals_list(prs_filtered,repo_data_tuple)
     
-    pr_activity = _get_bitbucket_pr_activity_log(pr_number,repo_data_tuple)
-    
-    with open('test_bitbucket_pr_activity.json' , 'w') as f:
-        f.write(dumps(pr_activity,indent=4, default=str))
+    with open('test_bitbucket_final.json', 'w') as f:
+        f.write(dumps(prs_final,indent=4, default=str))

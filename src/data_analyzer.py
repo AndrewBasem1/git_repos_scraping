@@ -3,7 +3,7 @@ from datetime import datetime
 from matplotlib import pyplot as plt
 
 
-def analyze_github_pr_data(pr_filtered_data: dict, str_vars_to_check: list | str = None):
+def analyze_scrapers_filtered_data(pr_filtered_data: dict, str_vars_to_check: list | str = None):
     """
     This function analyzes the pull request data and answers the following questions:
     1. How many pull requests were merged each day?
