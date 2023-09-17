@@ -153,6 +153,10 @@ def get_github_repo_pull_requests_filterd_data(repo_url: str, days_back: int):
         response = get(
             pr_data_endpoint_url, headers=request_headers, params=query_params
         )
+        if response.status_code != 200:
+            raise Exception(
+                f"An error occured while fetching the pull requests. Response status code: {response.status_code}, response body: {response.text}, reason: {response.reason}"
+            )
         raw_pr_events = response.json()
 
         # check if the response is empty (we have already paginated through all the results)
