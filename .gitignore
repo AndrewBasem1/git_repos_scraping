@@ -2,3 +2,4 @@ git_repos_scraping_env/*
 **/test*
 src/github_ready.zip
 **.*.zip
+**/*.zip
