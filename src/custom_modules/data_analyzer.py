@@ -3,7 +3,9 @@ from datetime import datetime
 from matplotlib import pyplot as plt
 
 
-def analyze_scrapers_filtered_data(pr_filtered_data: dict, str_vars_to_check: list | str = None):
+def analyze_scrapers_filtered_data(
+    pr_filtered_data: dict, str_vars_to_check: list | str = None
+):
     """
     This function analyzes the pull request data and answers the following questions:
     1. How many pull requests were merged each day?
@@ -21,6 +23,7 @@ def analyze_scrapers_filtered_data(pr_filtered_data: dict, str_vars_to_check: li
     - `pr_counter_per_day`: A dictionary with the number of pull requests merged each day.
     - `approvers_counter`: A dictionary with the number of pull requests approved by each user.
     - `str_matches_counter`: A dictionary with the number of pull requests that had a match with any string from a list of input strings.
+    - `str_matches_date_counter`: A dictionary with the number of pull requests that had a match with any string from a list of input strings, per day.
     """
     merged_pr_counter_per_day = Counter()
 
@@ -30,16 +33,17 @@ def analyze_scrapers_filtered_data(pr_filtered_data: dict, str_vars_to_check: li
     approvers_counter = Counter()
 
     str_matches_counter = Counter()
+    str_matches_date_counter = dict()
 
     for pr in pr_filtered_data:
         # question 1
         merged_at: datetime = pr["merged_at"]
         if merged_at is None:
-            pass
+            continue
         else:
             merged_at_date = merged_at.date()
             merged_at_str = str(merged_at_date)
-            merged_pr_counter_per_day [merged_at_str] += 1
+            merged_pr_counter_per_day[merged_at_str] += 1
             pass
 
         # question 2
@@ -73,10 +77,29 @@ def analyze_scrapers_filtered_data(pr_filtered_data: dict, str_vars_to_check: li
             if str_var in title or str_var in body:
                 str_matches_counter[str_var] += 1
 
+        # question 3 - date drill down
+        if str_vars_to_check is None:
+            continue
+        if isinstance(str_vars_to_check, str):
+            str_vars_to_check = [str_vars_to_check]
+        title = pr["title"].lower()
+        body = pr["body"].lower()
+        for str_var in str_vars_to_check:
+            if str_var in title or str_var in body:
+                merged_at = pr["merged_at"]
+                merged_at_str = str(merged_at.date())
+                if merged_at_str not in str_matches_date_counter:
+                    str_matches_date_counter[merged_at_str] = Counter()
+                    pass
+                str_matches_date_counter[merged_at_str][str_var] += 1
+                pass
+            pass
+
     analysis_results = {
         "merged_pr_counter_per_day": merged_pr_counter_per_day,
         "approvers_counter": approvers_counter,
         "str_matches_counter": str_matches_counter,
+        "str_matches_date_counter": str_matches_date_counter,
     }
-    
+
     return analysis_results
