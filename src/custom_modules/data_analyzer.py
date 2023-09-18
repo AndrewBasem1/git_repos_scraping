@@ -71,11 +71,11 @@ def analyze_scrapers_filtered_data(
             continue
         if isinstance(str_vars_to_check, str):
             str_vars_to_check = [str_vars_to_check]
-        if isinstance(title, str):
+        if isinstance(pr["title"], str):
             title = pr["title"].lower()
         else:
             title = ""
-        if isinstance(body, str):
+        if isinstance(pr["body"], str):
             body = pr["body"].lower()
         else:
             body = ""
