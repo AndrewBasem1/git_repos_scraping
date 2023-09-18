@@ -71,8 +71,14 @@ def analyze_scrapers_filtered_data(
             continue
         if isinstance(str_vars_to_check, str):
             str_vars_to_check = [str_vars_to_check]
-        title = pr["title"].lower()
-        body = pr["body"].lower()
+        if isinstance(title, str):
+            title = pr["title"].lower()
+        else:
+            title = ""
+        if isinstance(body, str):
+            body = pr["body"].lower()
+        else:
+            body = ""
         for str_var in str_vars_to_check:
             if str_var in title or str_var in body:
                 str_matches_counter[str_var] += 1
